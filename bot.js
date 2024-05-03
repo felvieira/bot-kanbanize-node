@@ -15,119 +15,129 @@ const userId = process.env.USER_ID;
 const chatId = process.env.CHAT_ID;
 const bot = new TelegramBot(token, { polling: true });
 
-
-cron.schedule("0 18 * * 1-5", () => {
+cron.schedule(
+  "0 18 * * 1-5",
+  () => {
     const opts = {
-        reply_markup: JSON.stringify({
-            inline_keyboard: [
-                [{ text: "Registrar Tempo", callback_data: 'registrar_tempo' }]
-            ]
-        })
+      reply_markup: JSON.stringify({
+        inline_keyboard: [
+          [{ text: "Registrar Tempo", callback_data: "registrar_tempo" }],
+        ],
+      }),
     };
-    bot.sendMessage(chatId, "Clique abaixo para registrar o tempo trabalhado hoje:", opts);
-}, {
+    bot.sendMessage(
+      chatId,
+      "Clique abaixo para registrar o tempo trabalhado hoje:",
+      opts
+    );
+  },
+  {
     scheduled: true,
-    timezone: "America/Sao_Paulo"
-});
-
+    timezone: "America/Sao_Paulo",
+  }
+);
 
 app.post("/send-message", (req, res) => {
-    const message = req.body.message;
-    if (message) {
-        bot.sendMessage(chatId, message);
-        res.send("Message sent!");
-    } else {
-        res.status(400).send("Message is required");
-    }
+  const message = req.body.message;
+  if (message) {
+    bot.sendMessage(chatId, message);
+    res.send("Message sent!");
+  } else {
+    res.status(400).send("Message is required");
+  }
 });
 
-app.post('/start-registration', (req, res) => {
-    const chatId = process.env.CHAT_ID;
-    if (chatId) {
-        startRegistrationProcess(chatId);
-        res.send("Processo de registro de tempo iniciado!");
-    } else {
-        res.status(400).send("CHAT_ID não definido no ambiente.");
-    }
+app.post("/start-registration", (req, res) => {
+  const chatId = process.env.CHAT_ID;
+  if (chatId) {
+    startRegistrationProcess(chatId);
+    res.send("Processo de registro de tempo iniciado!");
+  } else {
+    res.status(400).send("CHAT_ID não definido no ambiente.");
+  }
 });
 
 bot.on("callback_query", (callbackQuery) => {
-    const msg = callbackQuery.message;
-    const data = callbackQuery.data;
+  const msg = callbackQuery.message;
+  const data = callbackQuery.data;
 
-    if (data === "registrar_tempo") {
-        startRegistrationProcess(msg.chat.id);
-    }
+  if (data === "registrar_tempo") {
+    startRegistrationProcess(msg.chat.id);
+  }
 });
 
 bot.on("message", (msg) => {
-    if (msg.text.toLowerCase() === "/start") {
-        bot.sendMessage(msg.chat.id, "Bem-vindo! Use o botão abaixo quando estiver pronto para registrar seu tempo.", {
-            reply_markup: JSON.stringify({
-                inline_keyboard: [
-                    [{ text: "Registrar Tempo", callback_data: 'registrar_tempo' }]
-                ]
-            })
-        });
-    }
+  if (msg.text.toLowerCase() === "/start") {
+    bot.sendMessage(
+      msg.chat.id,
+      "Bem-vindo! Use o botão abaixo quando estiver pronto para registrar seu tempo.",
+      {
+        reply_markup: JSON.stringify({
+          inline_keyboard: [
+            [{ text: "Registrar Tempo", callback_data: "registrar_tempo" }],
+          ],
+        }),
+      }
+    );
+  }
 });
 
 async function startRegistrationProcess(chatId) {
-    bot.sendMessage(chatId, "Informe o Card ID:");
-    const cardId = await waitForNextMessage(chatId);
+  bot.sendMessage(chatId, "Informe o Card ID:");
+  const cardId = await waitForNextMessage(chatId);
 
-    bot.sendMessage(chatId, "Informe o tempo registrado em segundos:");
-    const timeInSeconds = await waitForNextMessage(chatId);
+  bot.sendMessage(chatId, "Informe o tempo registrado em segundos:");
+  const timeInSeconds = await waitForNextMessage(chatId);
 
-    const success = await registerTime(cardId, timeInSeconds);
-    if (success) {
-        bot.sendMessage(chatId, `Tempo registrado no Card ${cardId}`);
-    } else {
-        bot.sendMessage(chatId, "Algo deu errado ao registrar o tempo.");
-    }
+  const success = await registerTime(cardId, timeInSeconds);
+  if (success) {
+    bot.sendMessage(chatId, `Tempo registrado no Card ${cardId}`);
+  } else {
+    bot.sendMessage(chatId, "Algo deu errado ao registrar o tempo.");
+  }
 }
 
 function waitForNextMessage(chatId) {
-    return new Promise((resolve) => {
-        bot.on("message", handler);
-        function handler(msg) {
-            if (msg.chat.id === chatId) {
-                bot.removeListener("message", handler);
-                resolve(msg.text);
-            }
-        }
-    });
+  return new Promise((resolve) => {
+    bot.on("message", handler);
+    function handler(msg) {
+      if (msg.chat.id === chatId) {
+        bot.removeListener("message", handler);
+        resolve(msg.text);
+      }
+    }
+  });
 }
 
 async function registerTime(cardId, timeInSeconds) {
-    const apiUrl = "https://rennersa.kanbanize.com/api/v2/loggedTime";
-    const data = {
-        card_id: cardId,
-        subtask_id: null,
-        parent_card_id: null,
-        user_id: userId,
-        date: new Date().toISOString().split("T")[0],
-        time: timeInSeconds,
-        comment: "",
-        category_id: 2,
-    };
+  const apiUrl = "https://rennersa.kanbanize.com/api/v2/loggedTime";
+  const data = {
+    card_id: cardId,
+    subtask_id: null,
+    parent_card_id: null,
+    user_id: userId,
+    date: new Date().toISOString().split("T")[0],
+    time: timeInSeconds,
+    comment: "",
+    category_id: 2,
+  };
 
-    try {
-        const response = await axios.post(apiUrl, data, {
-            headers: {
-                accept: "/",
-                apikey: apiKey,
-                "content-type": "application/json",
-            },
-        });
-        return response.status === 200;
-    } catch (error) {
-        console.error(error);
-        return false;
-    }
+  try {
+    const response = await axios.post(apiUrl, data, {
+      headers: {
+        accept: "/",
+        apikey: apiKey,
+        "content-type": "application/json",
+      },
+    });
+    return response.status === 200;
+  } catch (error) {
+    console.error(error);
+    return false;
+  }
 }
 
 const port = process.env.PORT || 3000;
 app.listen(port, () => {
-    console.log(`Server running on port ${port}`);
+  console.log(`Server running on port ${port}`);
 });
