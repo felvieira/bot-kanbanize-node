@@ -47,57 +47,34 @@ app.post("/send-message", (req, res) => {
   }
 });
 
-async function registerTimeWEB(cardId, timeInSeconds) {
-  const apiUrl = "https://rennersa.kanbanize.com/api/v2/loggedTime";
-  const data = {
-    card_id: cardId,
-    subtask_id: null,
-    parent_card_id: null,
-    user_id: userId,
-    date: new Date().toISOString().split("T")[0],
-    time: timeInSeconds,
-    comment: "",
-    category_id: 2,
-  };
-
-  try {
-    const response = await axios.post(apiUrl, data, {
-      headers: {
-        accept: "/",
-        apikey: apiKey,
-        "content-type": "application/json",
-      },
-    });
-    return response.status === 200;
-  } catch (error) {
-    console.error(error);
-    return false;
-  }
-}
-
 app.post("/start-registration", async (req, res) => {
-  const cardId = req.body.cardId;
-  const timeInSeconds = req.body.timeInSeconds;
-
-  if (!cardId || !timeInSeconds) {
-    res.status(400).send("Card ID and time are required.");
-    return;
-  }
-
-  const success = await registerTimeWEB(cardId, timeInSeconds);
-  if (success) {
-    res.send(`Time registered on Card ${cardId}`);
+  const chatId = process.env.CHAT_ID;
+  if (chatId) {
+    // await startRegistrationProcess(chatId);
+    const opts = {
+        reply_markup: JSON.stringify({
+          inline_keyboard: [
+            [{ text: "Registrar Tempo", callback_data: "registrar_tempo" }],
+          ],
+        }),
+      };
+      bot.sendMessage(
+        chatId,
+        "Clique abaixo para registrar o tempo trabalhado hoje:",
+        opts
+      );
+    res.send("Processo de registro de tempo iniciado!");
   } else {
-    res.status(500).send("Failed to register time.");
+    res.status(400).send("CHAT_ID não definido no ambiente.");
   }
 });
 
-bot.on("callback_query", (callbackQuery) => {
+bot.on("callback_query", async (callbackQuery) => {
   const msg = callbackQuery.message;
   const data = callbackQuery.data;
 
   if (data === "registrar_tempo") {
-    startRegistrationProcess(msg.chat.id);
+    await startRegistrationProcess(msg.chat.id);
   }
 });
 
@@ -120,13 +97,11 @@ bot.on("message", (msg) => {
 async function startRegistrationProcess(chatId) {
   bot.sendMessage(chatId, "Informe o Card ID:");
   console.log("Pergunta sobre o Card ID enviada.");
-  await delay(5000); // Espera 5 segundos
   const cardId = await waitForNextMessage(chatId);
   console.log("Resposta recebida para o Card ID: ", cardId);
 
   bot.sendMessage(chatId, "Informe o tempo registrado em segundos:");
   console.log("Pergunta sobre o tempo registrado enviada.");
-  await delay(5000); // Espera 5 segundos
   const timeInSeconds = await waitForNextMessage(chatId);
   console.log("Resposta recebida para o tempo registrado: ", timeInSeconds);
 
@@ -138,12 +113,7 @@ async function startRegistrationProcess(chatId) {
   }
 }
 
-function delay(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
 function waitForNextMessage(chatId) {
-  console.log("🚀 ~ waitForNextMessage ~ chatId:", chatId);
   return new Promise((resolve) => {
     bot.on("message", handler);
     function handler(msg) {
