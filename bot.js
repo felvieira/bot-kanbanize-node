@@ -47,22 +47,22 @@ app.post("/send-message", (req, res) => {
   }
 });
 
-app.post("/start-registration", async (req, res) => {
+app.post("/start-registration", (req, res) => {
   const chatId = process.env.CHAT_ID;
   if (chatId) {
-    await startRegistrationProcess(chatId);
+    startRegistrationProcess(chatId);
     res.send("Processo de registro de tempo iniciado!");
   } else {
     res.status(400).send("CHAT_ID não definido no ambiente.");
   }
 });
 
-bot.on("callback_query", async (callbackQuery) => {
+bot.on("callback_query", (callbackQuery) => {
   const msg = callbackQuery.message;
   const data = callbackQuery.data;
 
   if (data === "registrar_tempo") {
-    await startRegistrationProcess(msg.chat.id);
+    startRegistrationProcess(msg.chat.id);
   }
 });
 
