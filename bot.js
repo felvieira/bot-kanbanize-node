@@ -47,22 +47,22 @@ app.post("/send-message", (req, res) => {
   }
 });
 
-app.post("/start-registration", (req, res) => {
+app.post("/start-registration", async (req, res) => {
   const chatId = process.env.CHAT_ID;
   if (chatId) {
-    startRegistrationProcess(chatId);
+    await startRegistrationProcess(chatId);
     res.send("Processo de registro de tempo iniciado!");
   } else {
     res.status(400).send("CHAT_ID não definido no ambiente.");
   }
 });
 
-bot.on("callback_query", (callbackQuery) => {
+bot.on("callback_query", async (callbackQuery) => {
   const msg = callbackQuery.message;
   const data = callbackQuery.data;
 
   if (data === "registrar_tempo") {
-    startRegistrationProcess(msg.chat.id);
+    await startRegistrationProcess(msg.chat.id);
   }
 });
 
@@ -84,10 +84,14 @@ bot.on("message", (msg) => {
 
 async function startRegistrationProcess(chatId) {
   bot.sendMessage(chatId, "Informe o Card ID:");
+  console.log("Pergunta sobre o Card ID enviada.");
   const cardId = await waitForNextMessage(chatId);
+  console.log("Resposta recebida para o Card ID: ", cardId);
 
   bot.sendMessage(chatId, "Informe o tempo registrado em segundos:");
+  console.log("Pergunta sobre o tempo registrado enviada.");
   const timeInSeconds = await waitForNextMessage(chatId);
+  console.log("Resposta recebida para o tempo registrado: ", timeInSeconds);
 
   const success = await registerTime(cardId, timeInSeconds);
   if (success) {
