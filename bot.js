@@ -41,6 +41,15 @@ app.post("/send-message", (req, res) => {
     }
 });
 
+app.post('/start-registration', (req, res) => {
+    const chatId = process.env.CHAT_ID;
+    if (chatId) {
+        startRegistrationProcess(chatId);
+        res.send("Processo de registro de tempo iniciado!");
+    } else {
+        res.status(400).send("CHAT_ID não definido no ambiente.");
+    }
+});
 
 bot.on("callback_query", (callbackQuery) => {
     const msg = callbackQuery.message;
