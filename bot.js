@@ -1,11 +1,22 @@
 require('dotenv').config();
 const TelegramBot = require('node-telegram-bot-api');
 const axios = require('axios');
+const cron = require('node-cron');
 
 const token = process.env.BOT_TOKEN;
 const apiKey = process.env.API_KEY;
 const userId = process.env.USER_ID;
 const bot = new TelegramBot(token, { polling: true });
+
+const chatId = 'SEU_CHAT_ID_AQUI'; // Substitua pelo seu Chat ID
+
+// Agendar tarefa para executar de segunda a sexta às 18:00
+cron.schedule('0 18 * * 1-5', () => {
+    bot.sendMessage(chatId, '/registrar');
+}, {
+    scheduled: true,
+    timezone: "America/Sao_Paulo"
+});
 
 bot.on('message', (msg) => {
     const chatId = msg.chat.id;
@@ -47,7 +58,7 @@ function waitForNextMessage(chatId) {
 }
 
 async function registerTime(cardId, timeInSeconds) {
-    const apiUrl = 'https://rennersa.kanbanize.com/api/v2/loggedTime'; // Substitua pela URL correta
+    const apiUrl = 'https://rennersa.kanbanize.com/api/v2/loggedTime';
     const data = {
         card_id: cardId,
         subtask_id: null,
