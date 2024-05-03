@@ -83,23 +83,30 @@ bot.on("message", (msg) => {
 });
 
 async function startRegistrationProcess(chatId) {
-  bot.sendMessage(chatId, "Informe o Card ID:");
-  console.log("Pergunta sobre o Card ID enviada.");
-  const cardId = await waitForNextMessage(chatId);
-  console.log("Resposta recebida para o Card ID: ", cardId);
+    bot.sendMessage(chatId, "Informe o Card ID:");
+    console.log("Pergunta sobre o Card ID enviada.");
+    await delay(5000); // Espera 5 segundos
+    const cardId = await waitForNextMessage(chatId);
+    console.log("Resposta recebida para o Card ID: ", cardId);
 
-  bot.sendMessage(chatId, "Informe o tempo registrado em segundos:");
-  console.log("Pergunta sobre o tempo registrado enviada.");
-  const timeInSeconds = await waitForNextMessage(chatId);
-  console.log("Resposta recebida para o tempo registrado: ", timeInSeconds);
+    bot.sendMessage(chatId, "Informe o tempo registrado em segundos:");
+    console.log("Pergunta sobre o tempo registrado enviada.");
+    await delay(5000); // Espera 5 segundos
+    const timeInSeconds = await waitForNextMessage(chatId);
+    console.log("Resposta recebida para o tempo registrado: ", timeInSeconds);
 
-  const success = await registerTime(cardId, timeInSeconds);
-  if (success) {
-    bot.sendMessage(chatId, `Tempo registrado no Card ${cardId}`);
-  } else {
-    bot.sendMessage(chatId, "Algo deu errado ao registrar o tempo.");
-  }
+    const success = await registerTime(cardId, timeInSeconds);
+    if (success) {
+        bot.sendMessage(chatId, `Tempo registrado no Card ${cardId}`);
+    } else {
+        bot.sendMessage(chatId, "Algo deu errado ao registrar o tempo.");
+    }
 }
+
+function delay(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 
 function waitForNextMessage(chatId) {
   return new Promise((resolve) => {
