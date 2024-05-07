@@ -18,18 +18,7 @@ const bot = new TelegramBot(token, { polling: true });
 cron.schedule(
   "0 18 * * 1-5",
   () => {
-    const opts = {
-      reply_markup: JSON.stringify({
-        inline_keyboard: [
-          [{ text: "Registrar Tempo", callback_data: "registrar_tempo" }],
-        ],
-      }),
-    };
-    bot.sendMessage(
-      chatId,
-      "Clique abaixo para registrar o tempo trabalhado hoje:",
-      opts
-    );
+    sendStartButton(chatId);
   },
   {
     scheduled: true,
@@ -48,48 +37,55 @@ app.post("/send-message", (req, res) => {
 });
 
 app.post("/start-registration", async (req, res) => {
-  const chatId = process.env.CHAT_ID;
   if (chatId) {
-    // await startRegistrationProcess(chatId);
-    const opts = {
-      reply_markup: JSON.stringify({
-        inline_keyboard: [
-          [{ text: "Registrar Tempo", callback_data: "registrar_tempo" }],
-        ],
-      }),
-    };
-    bot.sendMessage(
-      chatId,
-      "Clique abaixo para registrar o tempo trabalhado hoje:",
-      opts
-    );
+    sendStartButton(chatId);
     res.send("Processo de registro de tempo iniciado!");
   } else {
     res.status(400).send("CHAT_ID não definido no ambiente.");
   }
 });
 
+function sendStartButton(chatId) {
+  const opts = {
+    reply_markup: JSON.stringify({
+      inline_keyboard: [
+        [{ text: "Registrar Tempo", callback_data: "start_registration" }],
+      ],
+    }),
+  };
+  bot.sendMessage(
+    chatId,
+    "Clique abaixo para registrar o tempo trabalhado hoje:",
+    opts
+  );
+}
+
 bot.on("callback_query", async (callbackQuery) => {
   const msg = callbackQuery.message;
   const data = callbackQuery.data;
-  const chatId = msg.chat.id;
 
-  if (data === "registrar_tempo") {
-    await startRegistrationProcess(chatId);
-  } else if (!isNaN(data) || data === "custom") {
-    // Apanha o cardId guardado para este chat
-    const cardId = cardIds[chatId];
-    if (data === "custom") {
-      bot.sendMessage(chatId, "Informe o tempo registrado em segundos:");
+  if (data === "start_registration") {
+    await startRegistrationProcess(msg.chat.id);
+  } else {
+    const [cardId, timeData] = data.split("_");
+
+    if (timeData === "custom") {
+      bot.sendMessage(msg.chat.id, "Informe o tempo registrado em segundos:");
+      const customTime = await waitForNextMessage(msg.chat.id);
+      await registerTime(cardId, customTime);
+      bot.sendMessage(
+        msg.chat.id,
+        `Tempo registrado: ${customTime} segundos no Card ${cardId}.`
+      );
     } else {
-      const success = await registerTime(cardId, data); // 'data' já é o tempo em segundos
+      const success = await registerTime(cardId, timeData);
       if (success) {
         bot.sendMessage(
-          chatId,
-          `Tempo registrado: ${data} segundos no Card ${cardId}.`
+          msg.chat.id,
+          `Tempo registrado: ${timeData} segundos no Card ${cardId}.`
         );
       } else {
-        bot.sendMessage(chatId, "Algo deu errado ao registrar o tempo.");
+        bot.sendMessage(msg.chat.id, "Algo deu errado ao registrar o tempo.");
       }
     }
   }
@@ -97,38 +93,26 @@ bot.on("callback_query", async (callbackQuery) => {
 
 bot.on("message", (msg) => {
   if (msg.text.toLowerCase() === "/start") {
-    bot.sendMessage(
-      msg.chat.id,
-      "Bem-vindo! Use o botão abaixo quando estiver pronto para registrar seu tempo.",
-      {
-        reply_markup: JSON.stringify({
-          inline_keyboard: [
-            [{ text: "Registrar Tempo", callback_data: "registrar_tempo" }],
-          ],
-        }),
-      }
-    );
+    sendStartButton(msg.chat.id);
   }
 });
 
 async function startRegistrationProcess(chatId) {
   bot.sendMessage(chatId, "Informe o Card ID:");
-  console.log("Pergunta sobre o Card ID enviada.");
   const cardId = await waitForNextMessage(chatId);
-  console.log("Resposta recebida para o Card ID: ", cardId);
 
   const opts = {
     reply_markup: JSON.stringify({
       inline_keyboard: [
-        [{ text: "1 hora", callback_data: "3600" }],
-        [{ text: "2 horas", callback_data: "7200" }],
-        [{ text: "3 horas", callback_data: "10800" }],
-        [{ text: "4 horas", callback_data: "14400" }],
-        [{ text: "5 horas", callback_data: "18000" }],
-        [{ text: "6 horas", callback_data: "21600" }],
-        [{ text: "7 horas", callback_data: "25200" }],
-        [{ text: "8 horas", callback_data: "28800" }],
-        [{ text: "Outro valor", callback_data: "custom" }],
+        [{ text: "1 hora", callback_data: `${cardId}_3600` }],
+        [{ text: "2 horas", callback_data: `${cardId}_7200` }],
+        [{ text: "3 horas", callback_data: `${cardId}_10800` }],
+        [{ text: "4 horas", callback_data: `${cardId}_14400` }],
+        [{ text: "5 horas", callback_data: `${cardId}_18000` }],
+        [{ text: "6 horas", callback_data: `${cardId}_21600` }],
+        [{ text: "7 horas", callback_data: `${cardId}_25200` }],
+        [{ text: "8 horas", callback_data: `${cardId}_28800` }],
+        [{ text: "Outro valor", callback_data: `${cardId}_custom` }],
       ],
     }),
   };
@@ -137,29 +121,17 @@ async function startRegistrationProcess(chatId) {
     "Selecione o tempo trabalhado ou informe um valor personalizado:",
     opts
   );
-
-  // bot.sendMessage(chatId, "Informe o tempo registrado em segundos:");
-  // console.log("Pergunta sobre o tempo registrado enviada.");
-  const timeInSeconds = await waitForNextMessage(chatId);
-  console.log("Resposta recebida para o tempo registrado: ", timeInSeconds);
-
-  const success = await registerTime(cardId, timeInSeconds);
-  if (success) {
-    bot.sendMessage(chatId, `Tempo registrado no Card ${cardId}`);
-  } else {
-    bot.sendMessage(chatId, "Algo deu errado ao registrar o tempo.");
-  }
 }
 
 function waitForNextMessage(chatId) {
   return new Promise((resolve) => {
-    bot.on("message", handler);
-    function handler(msg) {
+    const handler = (msg) => {
       if (msg.chat.id === chatId) {
         bot.removeListener("message", handler);
         resolve(msg.text);
       }
-    }
+    };
+    bot.on("message", handler);
   });
 }
 
