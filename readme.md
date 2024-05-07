@@ -48,6 +48,9 @@ Após configurar as credenciais no arquivo `.env`, você pode executar o projeto
 
 Isso iniciará o seu bot Telegram e permitirá que ele interaja com o seu Chat ID. Além disso, ele será capaz de registrar o tempo de trabalho no Kanbanize.
 
+Você pode também pedir um registro a hora que quiser apenas dando um POST na rota /start-registration
+
+ curl -X POST https://URL-DA-APLICACAO/start-registration -H "Content-Type: application/json"         
 
 ## Deploy no Heroku
 
