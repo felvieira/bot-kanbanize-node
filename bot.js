@@ -72,9 +72,26 @@ app.post("/start-registration", async (req, res) => {
 bot.on("callback_query", async (callbackQuery) => {
   const msg = callbackQuery.message;
   const data = callbackQuery.data;
+  const chatId = msg.chat.id;
 
   if (data === "registrar_tempo") {
-    await startRegistrationProcess(msg.chat.id);
+    await startRegistrationProcess(chatId);
+  } else if (!isNaN(data) || data === "custom") {
+    // Apanha o cardId guardado para este chat
+    const cardId = cardIds[chatId];
+    if (data === "custom") {
+      bot.sendMessage(chatId, "Informe o tempo registrado em segundos:");
+    } else {
+      const success = await registerTime(cardId, data); // 'data' já é o tempo em segundos
+      if (success) {
+        bot.sendMessage(
+          chatId,
+          `Tempo registrado: ${data} segundos no Card ${cardId}.`
+        );
+      } else {
+        bot.sendMessage(chatId, "Algo deu errado ao registrar o tempo.");
+      }
+    }
   }
 });
 
