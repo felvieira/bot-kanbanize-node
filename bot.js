@@ -74,7 +74,18 @@ bot.on("callback_query", async (callbackQuery) => {
   const data = callbackQuery.data;
 
   if (data === "registrar_tempo") {
-    await startRegistrationProcess(msg.chat.id);
+      await startRegistrationProcess(msg.chat.id);
+  } else if (!isNaN(data) || data === 'custom') {
+      if (data === 'custom') {
+          bot.sendMessage(msg.chat.id, "Informe o tempo registrado em segundos:");
+      } else {
+          const success = await registerTime(1, data); // Assume cardId = 1 para exemplo
+          if (success) {
+              bot.sendMessage(msg.chat.id, `Tempo registrado: ${data} segundos`);
+          } else {
+              bot.sendMessage(msg.chat.id, "Algo deu errado ao registrar o tempo.");
+          }
+      }
   }
 });
 
@@ -95,33 +106,34 @@ bot.on("message", (msg) => {
 });
 
 async function startRegistrationProcess(chatId) {
-  bot.sendMessage(chatId, "Informe o Card ID:");
-  console.log("Pergunta sobre o Card ID enviada.");
-  const cardId = await waitForNextMessage(chatId);
-  console.log("Resposta recebida para o Card ID: ", cardId);
-
-  bot.sendMessage(chatId, "Informe o tempo registrado em segundos:");
-  console.log("Pergunta sobre o tempo registrado enviada.");
-  const timeInSeconds = await waitForNextMessage(chatId);
-  console.log("Resposta recebida para o tempo registrado: ", timeInSeconds);
-
-  const success = await registerTime(cardId, timeInSeconds);
-  if (success) {
-    bot.sendMessage(chatId, `Tempo registrado no Card ${cardId}`);
-  } else {
-    bot.sendMessage(chatId, "Algo deu errado ao registrar o tempo.");
-  }
+  const opts = {
+      reply_markup: JSON.stringify({
+          inline_keyboard: [
+              [{ text: "1 hora", callback_data: '3600' }],
+              [{ text: "2 horas", callback_data: '7200' }],
+              [{ text: "3 horas", callback_data: '10800' }],
+              [{ text: "4 horas", callback_data: '14400' }],
+              [{ text: "5 horas", callback_data: '18000' }],
+              [{ text: "6 horas", callback_data: '21600' }],
+              [{ text: "7 horas", callback_data: '25200' }],
+              [{ text: "8 horas", callback_data: '28800' }],
+              [{ text: "Outro valor", callback_data: 'custom' }]
+          ]
+      }),
+  };
+  bot.sendMessage(chatId, "Selecione o tempo trabalhado ou informe um valor personalizado:", opts);
+  console.log("Opções de tempo enviadas.");
 }
 
 function waitForNextMessage(chatId) {
   return new Promise((resolve) => {
-    bot.on("message", handler);
-    function handler(msg) {
-      if (msg.chat.id === chatId) {
-        bot.removeListener("message", handler);
-        resolve(msg.text);
+      bot.on("message", handler);
+      function handler(msg) {
+          if (msg.chat.id === chatId) {
+              bot.removeListener("message", handler);
+              resolve(msg.text);
+          }
       }
-    }
   });
 }
 
