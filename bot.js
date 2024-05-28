@@ -80,7 +80,9 @@ bot.on("callback_query", async (callbackQuery) => {
   const msg = callbackQuery.message;
   const data = callbackQuery.data;
 
-  if (data.startsWith("card_")) {
+  if (data === "start_registration") {
+    await startRegistrationProcess(msg.chat.id);
+  } else if (data.startsWith("card_")) {
     const cardId = data.split("_")[1];
     showTimeRegistrationOptions(cardId, msg.chat.id);
   } else if (data.includes("_")) {
@@ -88,12 +90,26 @@ bot.on("callback_query", async (callbackQuery) => {
     if (timeData === "custom") {
       bot.sendMessage(msg.chat.id, "Informe o tempo registrado em segundos:");
       const customTime = await waitForNextMessage(msg.chat.id);
-      await registerTime(cardId, customTime, msg.chat.id);
+      const success = await registerTime(cardId, customTime, msg.chat.id);
+      if (success) {
+        bot.sendMessage(
+          msg.chat.id,
+          `Tempo registrado: ${customTime} segundos no Card ${cardId}.`
+        );
+      } else {
+        bot.sendMessage(msg.chat.id, "Algo deu errado ao registrar o tempo.");
+      }
     } else {
-      await registerTime(cardId, timeData, msg.chat.id);
+      const success = await registerTime(cardId, timeData, msg.chat.id);
+      if (success) {
+        bot.sendMessage(
+          msg.chat.id,
+          `Tempo registrado: ${timeData} segundos no Card ${cardId}.`
+        );
+      } else {
+        bot.sendMessage(msg.chat.id, "Algo deu errado ao registrar o tempo.");
+      }
     }
-  } else if (data === "start_registration") {
-    await startRegistrationProcess(msg.chat.id);
   }
 });
 
@@ -160,14 +176,14 @@ function waitForNextMessage(chatId) {
 }
 
 async function registerTime(cardId, timeInSeconds, chatId) {
-  const apiUrl = `https://${kanbanizeDomain}/api/v2/loggedTime`;
+  const apiUrl = "https://rennersa.kanbanize.com/api/v2/loggedTime";
   const data = {
     card_id: cardId,
     subtask_id: null,
     parent_card_id: null,
     user_id: userId,
     date: new Date().toISOString().split("T")[0],
-    time: timeInSeconds,
+    time: parseInt(timeInSeconds, 10), // Certifique-se de que time está em segundos e é um número
     comment: "",
     category_id: 2,
   };
