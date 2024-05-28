@@ -15,7 +15,9 @@ const userId = process.env.USER_ID;
 const chatId = process.env.CHAT_ID;
 const kanbanizeDomain = process.env.KANBANIZE_DOMAIN;
 const boardId = process.env.BOARD_ID;
-const columnNames = process.env.COLUMN_NAMES.split(",");
+const columnNames = process.env.COLUMN_NAMES.split(",").map((name) =>
+  name.trim()
+);
 const bot = new TelegramBot(token, { polling: true });
 
 cron.schedule(
@@ -56,10 +58,8 @@ async function fetchColumnsFromKanbanize() {
   };
   try {
     const response = await axios.get(apiUrl, { headers });
-  
-    console.log("🚀 ~ fetchColumnsFromKanbanize ~ data:", response.data.data)
-   
 
+    // console.log("🚀 ~ fetchColumnsFromKanbanize ~ data:", response.data.data)
 
     return response.data.data;
   } catch (error) {
@@ -76,7 +76,7 @@ async function fetchCardsFromKanbanize() {
   };
   try {
     const response = await axios.get(apiUrl, { headers });
-    console.log("🚀 ~ fetchCardsFromKanbanize ~ data data:", response.data.data)
+    // console.log("🚀 ~ fetchCardsFromKanbanize ~ data data:", response.data.data)
 
     return response.data.data.data;
   } catch (error) {
