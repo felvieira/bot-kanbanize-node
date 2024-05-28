@@ -47,19 +47,20 @@ app.post("/start-registration", async (req, res) => {
 });
 
 async function fetchCardsFromKanbanize() {
-  const apiUrl = `https://${kanbanizeDomain}/api/v2/cards`;
+  const apiUrl = `https://${kanbanizeDomain}/api/v2/cards?owner_user_ids=${userId}`;
   const headers = {
     apikey: apiKey,
     "Content-Type": "application/json",
   };
   try {
     const response = await axios.get(apiUrl, { headers });
-    return response.data.cards; // Supondo que a resposta seja um objeto com uma propriedade 'cards'
+    return response.data.data; // Correção para acessar o array de cards corretamente
   } catch (error) {
     console.error("Erro ao fazer requisição para Kanbanize:", error);
     throw error;
   }
 }
+
 
 function sendStartButton(chatId) {
   const opts = {
@@ -81,21 +82,22 @@ bot.on("callback_query", async (callbackQuery) => {
   const data = callbackQuery.data;
 
   if (data.startsWith("card_")) {
-    const cardId = data.split("_")[1];
-    showTimeRegistrationOptions(cardId, msg.chat.id);
+      const cardId = data.split("_")[1];
+      showTimeRegistrationOptions(cardId, msg.chat.id);
   } else if (data.includes("_")) {
-    const [cardId, timeData] = data.split("_");
-    if (timeData === "custom") {
-      bot.sendMessage(msg.chat.id, "Informe o tempo registrado em segundos:");
-      const customTime = await waitForNextMessage(msg.chat.id);
-      await registerTime(cardId, customTime, msg.chat.id);
-    } else {
-      await registerTime(cardId, timeData, msg.chat.id);
-    }
+      const [cardId, timeData] = data.split("_");
+      if (timeData === "custom") {
+          bot.sendMessage(msg.chat.id, "Informe o tempo registrado em segundos:");
+          const customTime = await waitForNext messages(msg.chat.id);
+          await registerTime(cardId, customTime, msg.chat.id);
+      } else {
+          await registerTime(cardId, timeData, msg.chat.id);
+      }
   } else if (data === "start_registration") {
-    await startRegistrationProcess(msg.chat.id);
+      await startRegistrationProcess(msg.chat.id);
   }
 });
+
 
 bot.on("message", (msg) => {
   if (msg.text.toLowerCase() === "/start") {
@@ -105,20 +107,23 @@ bot.on("message", (msg) => {
 
 async function startRegistrationProcess(chatId) {
   try {
-    const cards = await fetchCardsFromKanbanize();
-    const opts = {
-      reply_markup: JSON.stringify({
-        inline_keyboard: cards.map((card) => [
-          { text: `${card.name}`, callback_data: `card_${card.id}` },
-        ]),
-      }),
-    };
-    bot.sendMessage(chatDir, "Escolha um card para registrar o tempo:", opts);
+      const cards = await fetchCardsFromKanbanize();
+      if (cards.length > 0) {
+          const opts = {
+              reply_markup: JSON.stringify({
+                  inline_keyboard: cards.map(card => [{ text: card.title, callback_data: `card_${card.card_id}` }])
+              })
+          };
+          bot.sendMessage(chatId, "Escolha um card para registrar o tempo:", opts);
+      } else {
+          bot.sendMessage(chatId, "Não há cards disponíveis.");
+      }
   } catch (error) {
-    console.error("Erro ao buscar cards:", error);
-    bot.sendMessage(chatId, "Erro ao buscar os cards do Kanbanize.");
+      console.error('Erro ao buscar cards:', error);
+      bot.sendMessage(chatId, "Erro ao buscar os cards do Kanbanize.");
   }
 }
+
 
 function showTimeRegistrationOptions(cardId, chatId) {
   const opts = {

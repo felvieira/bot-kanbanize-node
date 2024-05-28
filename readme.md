@@ -35,7 +35,7 @@ BOT_TOKEN=<seu_bot_token_aqui>
 CHAT_ID=<seu_chat_id_aqui>
 API_KEY=<sua_api_key_do_kanbanize_aqui>
 USER_ID=<seu_user_id_do_kanbanize_aqui>
-
+KANBANIZE_DOMAIN=<url_do_dominio_do_seu_kanbanize>
 
 4. Substitua `<seu_bot_token_aqui>` pelo Bot Token do Telegram.
 5. Substitua `<seu_chat_id_aqui>` pelo Chat ID do Telegram.
