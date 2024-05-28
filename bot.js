@@ -56,7 +56,12 @@ async function fetchColumnsFromKanbanize() {
   };
   try {
     const response = await axios.get(apiUrl, { headers });
-    return response.data.data;
+    console.log("🚀 ~ fetchColumnsFromKanbanize ~ data:", response.data)
+    console.log("🚀 ~ fetchColumnsFromKanbanize ~ data:", response.data.data)
+    console.log("🚀 ~ fetchColumnsFromKanbanize ~ data:", response.data.data.data)
+
+
+    return response.data.data.data;
   } catch (error) {
     console.error("Erro ao fazer requisição para Kanbanize:", error);
     throw error;
@@ -71,7 +76,12 @@ async function fetchCardsFromKanbanize() {
   };
   try {
     const response = await axios.get(apiUrl, { headers });
-    return response.data.data;
+    console.log("🚀 ~ fetchCardsFromKanbanize ~ data data:", response.data.data)
+    console.log("🚀 ~ fetchCardsFromKanbanize ~ data:", response.data)
+    console.log("🚀 ~ fetchCardsFromKanbanize ~ data data data:", response.data.data.data)
+
+
+    return response.data.data.data;
   } catch (error) {
     console.error("Erro ao fazer requisição para Kanbanize:", error);
     throw error;
