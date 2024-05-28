@@ -54,8 +54,8 @@ async function fetchCardsFromKanbanize() {
   };
   try {
     const response = await axios.get(apiUrl, { headers });
-    console.log("🚀 ~ fetchCardsFromKanbanize ~ response:", response.data)
-    return response.data; // Correção para acessar o array de cards corretamente
+    console.log("🚀 ~ fetchCardsFromKanbanize ~ response:", response.data.data)
+    return response.data.data.data; // Correção para acessar o array de cards corretamente
   } catch (error) {
     console.error("Erro ao fazer requisição para Kanbanize:", error);
     throw error;
