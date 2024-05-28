@@ -61,7 +61,6 @@ async function fetchCardsFromKanbanize() {
   }
 }
 
-
 function sendStartButton(chatId) {
   const opts = {
     reply_markup: JSON.stringify({
@@ -82,22 +81,21 @@ bot.on("callback_query", async (callbackQuery) => {
   const data = callbackQuery.data;
 
   if (data.startsWith("card_")) {
-      const cardId = data.split("_")[1];
-      showTimeRegistrationOptions(cardId, msg.chat.id);
+    const cardId = data.split("_")[1];
+    showTimeRegistrationOptions(cardId, msg.chat.id);
   } else if (data.includes("_")) {
-      const [cardId, timeData] = data.split("_");
-      if (timeData === "custom") {
-          bot.sendMessage(msg.chat.id, "Informe o tempo registrado em segundos:");
-          const customTime = await waitForNextMessage(msg.chat.id);
-          await registerTime(cardId, customTime, msg.chat.id);
-      } else {
-          await registerTime(cardId, timeData, msg.chat.id);
-      }
+    const [cardId, timeData] = data.split("_");
+    if (timeData === "custom") {
+      bot.sendMessage(msg.chat.id, "Informe o tempo registrado em segundos:");
+      const customTime = await waitForNextMessage(msg.chat.id);
+      await registerTime(cardId, customTime, msg.chat.id);
+    } else {
+      await registerTime(cardId, timeData, msg.chat.id);
+    }
   } else if (data === "start_registration") {
-      await startRegistrationProcess(msg.chat.id);
+    await startRegistrationProcess(msg.chat.id);
   }
 });
-
 
 bot.on("message", (msg) => {
   if (msg.text.toLowerCase() === "/start") {
@@ -107,23 +105,24 @@ bot.on("message", (msg) => {
 
 async function startRegistrationProcess(chatId) {
   try {
-      const cards = await fetchCardsFromKanbanize();
-      if (cards.length > 0) {
-          const opts = {
-              reply_markup: JSON.stringify({
-                  inline_keyboard: cards.map(card => [{ text: card.title, callback_data: `card_${card.card_id}` }])
-              })
-          };
-          bot.sendMessage(chatId, "Escolha um card para registrar o tempo:", opts);
-      } else {
-          bot.sendMessage(chatId, "Não há cards disponíveis.");
-      }
+    const cards = await fetchCardsFromKanbanize();
+    if (cards.length > 0) {
+      const opts = {
+        reply_markup: JSON.stringify({
+          inline_keyboard: cards.map((card) => [
+            { text: card.title, callback_data: `card_${card.card_id}` },
+          ]),
+        }),
+      };
+      bot.sendMessage(chatId, "Escolha um card para registrar o tempo:", opts);
+    } else {
+      bot.sendMessage(chatId, "Não há cards disponíveis.");
+    }
   } catch (error) {
-      console.error('Erro ao buscar cards:', error);
-      bot.sendMessage(chatId, "Erro ao buscar os cards do Kanbanize.");
+    console.error("Erro ao buscar cards:", error);
+    bot.sendMessage(chatId, "Erro ao buscar os cards do Kanbanize.");
   }
 }
-
 
 function showTimeRegistrationOptions(cardId, chatId) {
   const opts = {
@@ -148,7 +147,6 @@ function showTimeRegistrationOptions(cardId, chatId) {
   );
 }
 
-
 function waitForNextMessage(chatId) {
   return new Promise((resolve) => {
     const handler = (msg) => {
@@ -161,8 +159,8 @@ function waitForNextMessage(chatId) {
   });
 }
 
-async function registerTime(cardId, timeInSeconds) {
-  const apiUrl = "https://rennersa.kanbanize.com/api/v2/loggedTime";
+async function registerTime(cardId, timeInSeconds, chatId) {
+  const apiUrl = `https://${kanbanizeDomain}/api/v2/loggedTime`;
   const data = {
     card_id: cardId,
     subtask_id: null,
@@ -174,6 +172,8 @@ async function registerTime(cardId, timeInSeconds) {
     category_id: 2,
   };
 
+  console.log("Payload enviado para Kanbanize:", JSON.stringify(data, null, 2));
+
   try {
     const response = await axios.post(apiUrl, data, {
       headers: {
@@ -182,9 +182,21 @@ async function registerTime(cardId, timeInSeconds) {
         "content-type": "application/json",
       },
     });
+    if (response.status === 200) {
+      bot.sendMessage(chatId, "Tempo registrado com sucesso!");
+    } else {
+      bot.sendMessage(
+        chatId,
+        "Erro ao registrar tempo. Por favor, tente novamente."
+      );
+    }
     return response.status === 200;
   } catch (error) {
-    console.error(error);
+    console.error("Erro ao registrar tempo:", error.response.data);
+    bot.sendMessage(
+      chatId,
+      `Erro ao registrar tempo: ${error.response.data.error.message}`
+    );
     return false;
   }
 }
