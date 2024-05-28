@@ -14,6 +14,8 @@ const apiKey = process.env.API_KEY;
 const userId = process.env.USER_ID;
 const chatId = process.env.CHAT_ID;
 const kanbanizeDomain = process.env.KANBANIZE_DOMAIN;
+const boardId = process.env.BOARD_ID;
+const columnNames = process.env.COLUMN_NAMES.split(",");
 const bot = new TelegramBot(token, { polling: true });
 
 cron.schedule(
@@ -46,6 +48,21 @@ app.post("/start-registration", async (req, res) => {
   }
 });
 
+async function fetchColumnsFromKanbanize() {
+  const apiUrl = `https://${kanbanizeDomain}/api/v2/boards/${boardId}/columns`;
+  const headers = {
+    apikey: apiKey,
+    "Content-Type": "application/json",
+  };
+  try {
+    const response = await axios.get(apiUrl, { headers });
+    return response.data.data;
+  } catch (error) {
+    console.error("Erro ao fazer requisição para Kanbanize:", error);
+    throw error;
+  }
+}
+
 async function fetchCardsFromKanbanize() {
   const apiUrl = `https://${kanbanizeDomain}/api/v2/cards?owner_user_ids=${userId}`;
   const headers = {
@@ -54,8 +71,7 @@ async function fetchCardsFromKanbanize() {
   };
   try {
     const response = await axios.get(apiUrl, { headers });
-    console.log("🚀 ~ fetchCardsFromKanbanize ~ response:", response.data.data)
-    return response.data.data.data; // Correção para acessar o array de cards corretamente
+    return response.data.data.data;
   } catch (error) {
     console.error("Erro ao fazer requisição para Kanbanize:", error);
     throw error;
@@ -123,11 +139,20 @@ bot.on("message", (msg) => {
 async function startRegistrationProcess(chatId) {
   try {
     const cards = await fetchCardsFromKanbanize();
-    console.log("🚀 ~ startRegistrationProcess ~ cards:", cards)
-    if (cards.length > 0) {
+    const columns = await fetchColumnsFromKanbanize();
+    const columnMap = columns.reduce((acc, column) => {
+      acc[column.column_id] = column.name;
+      return acc;
+    }, {});
+
+    const filteredAndOrderedCards = columnNames.flatMap(columnName => 
+      cards.filter(card => columnMap[card.column_id] === columnName)
+    );
+
+    if (filteredAndOrderedCards.length > 0) {
       const opts = {
         reply_markup: JSON.stringify({
-          inline_keyboard: cards.map((card) => [
+          inline_keyboard: filteredAndOrderedCards.map((card) => [
             { text: card.title, callback_data: `card_${card.card_id}` },
           ]),
         }),

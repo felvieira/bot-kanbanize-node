@@ -36,11 +36,15 @@ CHAT_ID=<seu_chat_id_aqui>
 API_KEY=<sua_api_key_do_kanbanize_aqui>
 USER_ID=<seu_user_id_do_kanbanize_aqui>
 KANBANIZE_DOMAIN=<url_do_dominio_do_seu_kanbanize>
+BOARD_ID=<seu_board_id_do_kanbanize>
+COLUMN_NAMES=<lista_de_nomes_de_colunas>
 
 4. Substitua `<seu_bot_token_aqui>` pelo Bot Token do Telegram.
 5. Substitua `<seu_chat_id_aqui>` pelo Chat ID do Telegram.
 6. Substitua `<sua_api_key_do_kanbanize_aqui>` pela API Key do Kanbanize.
 7. Substitua `<seu_user_id_do_kanbanize_aqui>` pelo User ID do Kanbanize.
+8. Substitua `<seu_board_id_do_kanbanize>` pelo Board ID do Kanbanize.
+9. Substitua `<lista_de_nomes_de_colunas>` pela lista de nomes de colunas em ordem desejadapara que apareçam no bot nessa ordem, separados por vírgula (exemplo: Desenvolvimento,Comprometido,Refinamento).
 
 ## Executando o Projeto
 
