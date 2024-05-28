@@ -54,7 +54,8 @@ async function fetchCardsFromKanbanize() {
   };
   try {
     const response = await axios.get(apiUrl, { headers });
-    return response.data.data; // Correção para acessar o array de cards corretamente
+    console.log("🚀 ~ fetchCardsFromKanbanize ~ response:", response.data)
+    return response.data; // Correção para acessar o array de cards corretamente
   } catch (error) {
     console.error("Erro ao fazer requisição para Kanbanize:", error);
     throw error;
@@ -122,6 +123,7 @@ bot.on("message", (msg) => {
 async function startRegistrationProcess(chatId) {
   try {
     const cards = await fetchCardsFromKanbanize();
+    console.log("🚀 ~ startRegistrationProcess ~ cards:", cards)
     if (cards.length > 0) {
       const opts = {
         reply_markup: JSON.stringify({
