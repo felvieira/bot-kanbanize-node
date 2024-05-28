@@ -78,7 +78,7 @@ function sendStartButton(chatId) {
 
 bot.on("callback_query", async (callbackQuery) => {
   const msg = callbackQuery.message;
-  const data = callbackScript.data;
+  const data = callbackQuery.data;
 
   if (data.startsWith("card_")) {
     const cardId = data.split("_")[1];
@@ -96,37 +96,6 @@ bot.on("callback_query", async (callbackQuery) => {
     await startRegistrationProcess(msg.chat.id);
   }
 });
-
-// bot.on("callback_query", async (callbackQuery) => {
-//   const msg = callbackQuery.message;
-//   const data = callbackQuery.data;
-
-//   if (data === "start_registration") {
-//     await startRegistrationProcess(msg.chat.id);
-//   } else {
-//     const [cardId, timeData] = data.split("_");
-
-//     if (timeData === "custom") {
-//       bot.sendMessage(msg.chat.id, "Informe o tempo registrado em segundos:");
-//       const customTime = await waitForNextMessage(msg.chat.id);
-//       await registerTime(cardId, customTime);
-//       bot.sendMessage(
-//         msg.chat.id,
-//         `Tempo registrado: ${customTime} segundos no Card ${cardId}.`
-//       );
-//     } else {
-//       const success = await registerTime(cardId, timeData);
-//       if (success) {
-//         bot.sendMessage(
-//           msg.chat.id,
-//           `Tempo registrado: ${timeData} segundos no Card ${cardId}.`
-//         );
-//       } else {
-//         bot.sendMessage(msg.chat.id, "Algo deu errado ao registrar o tempo.");
-//       }
-//     }
-//   }
-// });
 
 bot.on("message", (msg) => {
   if (msg.text.toLowerCase() === "/start") {
@@ -174,31 +143,6 @@ function showTimeRegistrationOptions(cardId, chatId) {
   );
 }
 
-// async function startRegistrationProcess(chatId) {
-//   bot.sendMessage(chatId, "Informe o Card ID:");
-//   const cardId = await waitForNextMessage(chatId);
-
-//   const opts = {
-//     reply_markup: JSON.stringify({
-//       inline_keyboard: [
-//         [{ text: "1 hora", callback_data: `${cardId}_3600` }],
-//         [{ text: "2 horas", callback_data: `${cardId}_7200` }],
-//         [{ text: "3 horas", callback_data: `${cardId}_10800` }],
-//         [{ text: "4 horas", callback_data: `${cardId}_14400` }],
-//         [{ text: "5 horas", callback_data: `${cardId}_18000` }],
-//         [{ text: "6 horas", callback_data: `${cardId}_21600` }],
-//         [{ text: "7 horas", callback_data: `${cardId}_25200` }],
-//         [{ text: "8 horas", callback_data: `${cardId}_28800` }],
-//         [{ text: "Outro valor", callback_data: `${cardId}_custom` }],
-//       ],
-//     }),
-//   };
-//   bot.sendMessage(
-//     chatId,
-//     "Selecione o tempo trabalhado ou informe um valor personalizado:",
-//     opts
-//   );
-// }
 
 function waitForNextMessage(chatId) {
   return new Promise((resolve) => {
