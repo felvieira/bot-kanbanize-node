@@ -88,7 +88,7 @@ bot.on("callback_query", async (callbackQuery) => {
       const [cardId, timeData] = data.split("_");
       if (timeData === "custom") {
           bot.sendMessage(msg.chat.id, "Informe o tempo registrado em segundos:");
-          const customTime = await waitForNext messages(msg.chat.id);
+          const customTime = await waitForNextMessage(msg.chat.id);
           await registerTime(cardId, customTime, msg.chat.id);
       } else {
           await registerTime(cardId, timeData, msg.chat.id);
