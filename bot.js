@@ -71,7 +71,7 @@ async function fetchCardsFromKanbanize() {
   };
   try {
     const response = await axios.get(apiUrl, { headers });
-    return response.data.data.data;
+    return response.data.data;
   } catch (error) {
     console.error("Erro ao fazer requisição para Kanbanize:", error);
     throw error;
@@ -145,8 +145,8 @@ async function startRegistrationProcess(chatId) {
       return acc;
     }, {});
 
-    const filteredAndOrderedCards = columnNames.flatMap(columnName => 
-      cards.filter(card => columnMap[card.column_id] === columnName)
+    const filteredAndOrderedCards = columnNames.flatMap((columnName) =>
+      cards.filter((card) => columnMap[card.column_id] === columnName)
     );
 
     if (filteredAndOrderedCards.length > 0) {
@@ -203,7 +203,7 @@ function waitForNextMessage(chatId) {
 }
 
 async function registerTime(cardId, timeInSeconds, chatId) {
-  const apiUrl = "https://rennersa.kanbanize.com/api/v2/loggedTime";
+  const apiUrl = `https://${kanbanizeDomain}/api/v2/loggedTime`;
   const data = {
     card_id: cardId,
     subtask_id: null,
