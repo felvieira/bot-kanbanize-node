@@ -2,6 +2,12 @@
 
 Este projeto utiliza a integração com o Telegram Bot API e a API do Kanbanize para registrar o tempo de trabalho em cartões específicos. Antes de executar o projeto, você precisará configurar as seguintes credenciais:
 
+
+## Demo
+
+![Demonstração](demo-otm.gif)
+
+
 ## Obtendo o Bot Token do Telegram
 
 1. Abra o Telegram e pesquise por **BotFather**.
