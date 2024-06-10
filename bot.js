@@ -50,6 +50,19 @@ app.post("/start-registration", async (req, res) => {
   }
 });
 
+app.get("/start-registration", async (req, res) => {
+  if (chatId) {
+    try {
+      sendStartButton(chatId);
+      res.send("Processo de registro de tempo iniciado!");
+    } catch (error) {
+      res.status(500).send("Erro ao iniciar o processo de registro de tempo.");
+    }
+  } else {
+    res.status(400).send("CHAT_ID não definido no ambiente.");
+  }
+});
+
 async function fetchColumnsFromKanbanize() {
   const apiUrl = `https://${kanbanizeDomain}/api/v2/boards/${boardId}/columns`;
   const headers = {
