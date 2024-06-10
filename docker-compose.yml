@@ -1,0 +1,14 @@
+version: '3'
+services:
+  app:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - BOT_TOKEN=${BOT_TOKEN}
+      - CHAT_ID=${CHAT_ID}
+      - API_KEY=${API_KEY}
+      - USER_ID=${USER_ID}
+      - KANBANIZE_DOMAIN=${KANBANIZE_DOMAIN}
+      - BOARD_ID=${BOARD_ID}
+      - COLUMN_NAMES=${COLUMN_NAMES}
